@@ -83,7 +83,7 @@ public class User {
      * The employee's phone number. Mapped to the "telefon" column.
      * This field is unique but optional (nullable = true).
      */
-    @Column(name = "telefon", unique = true, nullable = true)
+    @Column(name = "telefon", unique = true)
     private String phone_number;
 
     /**
@@ -103,7 +103,7 @@ public class User {
      * The official date the employee's employment ended (if applicable).
      * Mapped to the "data_zwolnienia" column and is optional (nullable = true).
      */
-    @Column(name = "data_zwolnienia", nullable = true)
+    @Column(name = "data_zwolnienia")
     private LocalDate retirementDate;
 
     /**
