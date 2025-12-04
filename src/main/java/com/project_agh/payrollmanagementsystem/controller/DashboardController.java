@@ -1,5 +1,6 @@
 package com.project_agh.payrollmanagementsystem.controller;
 
+import com.project_agh.payrollmanagementsystem.dtos.CreateDepartmentDto;
 import com.project_agh.payrollmanagementsystem.dtos.CreateUserDto;
 import com.project_agh.payrollmanagementsystem.dtos.PasswordChangeDto;
 import com.project_agh.payrollmanagementsystem.dtos.PhoneNumberDto;
@@ -104,6 +105,7 @@ public class DashboardController {
             model.addAttribute("departmentsList", departmentRepository.findAll());
             model.addAttribute("newUserForm", new CreateUserDto());
             model.addAttribute("allUsers", userRepository.findAll());
+            model.addAttribute("newDepartmentForm", new CreateDepartmentDto());
         }
 
         // Render the dashboard page
