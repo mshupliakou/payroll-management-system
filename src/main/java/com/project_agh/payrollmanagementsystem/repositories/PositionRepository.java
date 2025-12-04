@@ -20,4 +20,6 @@ public interface PositionRepository {
      * @return a {@link List} containing all {@link Position} entities
      */
     List<Position> findAll();
+
+    void createPosition(String position_name, String position_desc);
 }
