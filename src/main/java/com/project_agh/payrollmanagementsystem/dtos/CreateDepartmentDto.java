@@ -11,8 +11,9 @@ import lombok.Data;
  */
 @Data
 public class CreateDepartmentDto {
+    private Long id;
 
-    /**
+    /**s
      * The name of the department.
      * Should be unique and clearly identify the department.
      */
