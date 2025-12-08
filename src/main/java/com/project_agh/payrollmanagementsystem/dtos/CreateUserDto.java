@@ -70,4 +70,6 @@ public class CreateUserDto {
      * Identifier of the department the user belongs to.
      */
     private Long id_dzial;
+
+    private  String account;
 }
