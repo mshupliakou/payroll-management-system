@@ -1,14 +1,8 @@
 package com.project_agh.payrollmanagementsystem.controller;
 
-import com.project_agh.payrollmanagementsystem.dtos.CreateDepartmentDto;
-import com.project_agh.payrollmanagementsystem.dtos.CreateUserDto;
-import com.project_agh.payrollmanagementsystem.dtos.PasswordChangeDto;
-import com.project_agh.payrollmanagementsystem.dtos.PhoneNumberDto;
+import com.project_agh.payrollmanagementsystem.dtos.*;
 import com.project_agh.payrollmanagementsystem.entities.User;
-import com.project_agh.payrollmanagementsystem.repositories.DepartmentRepository;
-import com.project_agh.payrollmanagementsystem.repositories.PositionRepository;
-import com.project_agh.payrollmanagementsystem.repositories.RoleRepository;
-import com.project_agh.payrollmanagementsystem.repositories.UserRepository;
+import com.project_agh.payrollmanagementsystem.repositories.*;
 
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -30,6 +24,7 @@ public class DashboardController {
     private final RoleRepository roleRepository;
     private final DepartmentRepository departmentRepository;
     private final PositionRepository positionRepository;
+    private final ProjectRepository projectRepository;
 
     /**
      * Constructs a DashboardController with required repositories.
@@ -43,12 +38,14 @@ public class DashboardController {
             UserRepository userRepository,
             RoleRepository roleRepository,
             DepartmentRepository departmentRepository,
-            PositionRepository positionRepository
+            PositionRepository positionRepository,
+            ProjectRepository projectRepository
     ) {
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
         this.departmentRepository = departmentRepository;
         this.positionRepository = positionRepository;
+        this.projectRepository = projectRepository;
     }
 
     /**
@@ -94,7 +91,8 @@ public class DashboardController {
         model.addAttribute("passwordChangeForm", new PasswordChangeDto());
         model.addAttribute("phoneNumberChangeForm", new PhoneNumberDto());
         model.addAttribute("newUserForm", new CreateUserDto());
-
+        model.addAttribute("AccountChangeForm", new BankAccountDto());
+        model.addAttribute("newWorkHoursForm", new WorkHoursDto());
         // Provide an empty list for non-admins (dashboard loops expect this attribute)
         model.addAttribute("allUsers", Collections.emptyList());
 
@@ -103,9 +101,17 @@ public class DashboardController {
             model.addAttribute("rolesList", roleRepository.findAll());
             model.addAttribute("positionsList", positionRepository.findAll());
             model.addAttribute("departmentsList", departmentRepository.findAll());
+            model.addAttribute("projectsList", projectRepository.findAll());
             model.addAttribute("newUserForm", new CreateUserDto());
             model.addAttribute("allUsers", userRepository.findAll());
             model.addAttribute("newDepartmentForm", new CreateDepartmentDto());
+            model.addAttribute("newPositionForm", new PositionDto());
+            model.addAttribute("newRoleForm", new RoleDto());
+
+            model.addAttribute("newProjectForm", new ProjectDto());
+            model.addAttribute("newWorkTypeForm", new WorkTypeDto());
+
+
         }
 
         // Render the dashboard page
