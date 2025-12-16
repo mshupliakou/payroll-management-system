@@ -6,6 +6,8 @@ import lombok.NoArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 
 
 @Entity
@@ -32,5 +34,11 @@ public class Project {
     @Column(name = "data_zakonczenia")
     @DateTimeFormat(pattern = "yyyy-MM-dd")
     private LocalDate projectEndDate;
+
+    @Transient
+    private List<ProjectMember> members = new ArrayList<>();
+    public boolean hasMember(Long userId) {
+        return members.stream().anyMatch(m -> m.getUser().getId().equals(userId));
+    }
 
 }
