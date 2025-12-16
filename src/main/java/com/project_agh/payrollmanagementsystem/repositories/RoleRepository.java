@@ -19,4 +19,10 @@ public interface RoleRepository {
      * @return a {@link List} containing all {@link Role} entities
      */
     List<Role> findAll();
+
+    void createRole(String role_name );
+
+    void deleteRole(Long id);
+
+    void editRole(Long id, String name);
 }
