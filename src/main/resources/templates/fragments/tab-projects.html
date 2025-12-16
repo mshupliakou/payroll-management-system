@@ -1,0 +1,320 @@
+<div th:fragment="projectsFragment" class="management-flex-container">
+    <div id="Projects" class="tabcontent" sec:authorize="hasAuthority('ROLE_ADMIN')" xmlns:sec="http://www.w3.org/1999/xhtml">
+        <div class="content-wrapper">
+
+            <h2 id="section-projects">Zarządzanie Projektami</h2>
+
+            <button type="button" class="btn" onclick="openModal('createProjectModal')">
+                Dodaj projekt
+            </button>
+
+            <div id="createProjectModal" class="modal">
+                <div class="modal-content modal-form">
+                    <span class="close" onclick="closeModal('createProjectModal')">&times;</span>
+                    <h4>Dodaj Nowy Projekt</h4>
+
+                    <form th:action="@{/admin/projects/create}" method="post" th:object="${newProjectForm}">
+                        <label>Nazwa projektu:</label>
+                        <input type="text" th:field="*{name}" required>
+
+                        <label>Opis:</label>
+                        <textarea th:field="*{description}" rows="3" style="width: 100%;"></textarea>
+
+                        <div style="display: flex; gap: 10px;">
+                            <div style="flex: 1;">
+                                <label>Data rozpoczęcia:</label>
+                                <input type="date" th:field="*{projectBeginDate}" required>
+                            </div>
+                            <div style="flex: 1;">
+                                <label>Data zakończenia (opcjonalnie):</label>
+                                <input type="date" th:field="*{projectEndDate}">
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn" style="margin-top: 15px;">Utwórz</button>
+                    </form>
+                </div>
+            </div>
+
+            <br><br>
+            <h3>Lista projektów</h3>
+
+            <table id="projectsTable" class="table-block display" style="width:100%">
+                <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Nazwa</th>
+                    <th>Opis</th>
+                    <th>Okres trwania</th>
+                    <th>Akcje</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="project : ${projectsList}">
+                    <td th:text="${project.id}"></td>
+                    <td th:text="${project.name}" style="font-weight: bold;"></td>
+                    <td th:text="${project.description}"></td>
+                    <td>
+                        <span th:text="${project.projectBeginDate}"></span>
+                        <span th:if="${project.projectEndDate != null}" th:text="' - ' + ${project.projectEndDate}"></span>
+                    </td>
+                    <td>
+                        <button class="btn" type="button" th:onclick="'openModal(\'editProjectModal-' + ${project.id} + '\')'">Edytuj</button>
+                        <div th:id="'editProjectModal-' + ${project.id}" class="modal">
+                            <div class="modal-content modal-form">
+                                <span class="close" th:onclick="'closeModal(\'editProjectModal-' + ${project.id} + '\')'">&times;</span>
+                                <h4>Edycja projektu</h4>
+                                <form th:action="@{/admin/projects/edit}" method="post">
+                                    <input type="hidden" name="id" th:value="${project.id}" />
+                                    <label>Nazwa:</label>
+                                    <input type="text" name="name" th:value="${project.name}" required>
+                                    <label>Opis:</label>
+                                    <textarea name="description" rows="3" style="width: 100%;" th:text="${project.description}"></textarea>
+                                    <label>Data rozpoczęcia:</label>
+                                    <input type="date" name="projectBeginDate" th:value="${project.projectBeginDate}" required>
+                                    <label>Data zakończenia:</label>
+                                    <input type="date" name="projectEndDate" th:value="${project.projectEndDate}">
+                                    <button type="submit" class="btn">Zatwierdź zmiany</button>
+                                </form>
+                            </div>
+                        </div>
+
+                        <button class="btn" type="button" th:onclick="'openModal(\'editGroupModal-' + ${project.id} + '\')'">Zespół</button>
+                        <div th:id="'editGroupModal-' + ${project.id}" class="modal">
+                            <div class="modal-content modal-form" style="width: 80%; max-width: 1000px;">
+                                <span class="close" th:onclick="'closeModal(\'editGroupModal-' + ${project.id} + '\')'">&times;</span>
+                                <h4>Zarządzanie zespołem: <span th:text="${project.name}"></span></h4>
+
+                                <h5>Obecni członkowie projektu</h5>
+                                <div th:if="${project.members.empty}"><p>Brak przypisanych pracowników.</p></div>
+                                <table th:unless="${project.members.empty}" class="table-block display dt-current-members" style="width:100%; margin-bottom: 20px;">
+                                    <thead>
+                                    <tr>
+                                        <th>Imię i Nazwisko</th>
+                                        <th>Stanowisko</th>
+                                        <th>Rola w projekcie</th>
+                                        <th>Akcja</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    <tr th:each="member : ${project.members}">
+                                        <td th:text="${member.user.name} + ' ' + ${member.user.lastname}"></td>
+                                        <td th:text="${member.user.position != null ? member.user.position.name : '-'}"></td>
+                                        <td th:text="${member.projectRole}" style="font-weight: bold; color: #2980b9;"></td>
+                                        <td>
+                                            <form th:action="@{/admin/projects/remove_user}" method="post">
+                                                <input type="hidden" name="projectId" th:value="${project.id}" />
+                                                <input type="hidden" name="userId" th:value="${member.user.id}" />
+                                                <button type="submit" class="btn-danger" style="padding: 5px 10px; font-size: 0.8em;">Usuń</button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                    </tbody>
+                                </table>
+
+                                <div class="divider"></div>
+
+                                <h5>Dodaj pracowników do projektu</h5>
+                                <div style="max-height: 400px; overflow-y: auto;">
+                                    <table th:id="'availableUsersTable-' + ${project.id}" class="table-block display dt-project-users" style="width:100%">
+                                        <thead>
+                                        <tr>
+                                            <th style="width: 30%">Pracownik</th>
+                                            <th style="width: 25%">Stanowisko</th>
+                                            <th style="width: 45%">Rola i Akcja</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody>
+                                        <tr th:each="user : ${allUsers}">
+                                            <td th:text="${user.name} + ' ' + ${user.lastname}"></td>
+                                            <td th:text="${user.position != null ? user.position.name : '-'}"></td>
+                                            <td>
+                                                <div th:if="${project.hasMember(user.id)}">
+                                                    <span style="color: green; font-weight: bold;">Już w zespole</span>
+                                                </div>
+                                                <div th:unless="${project.hasMember(user.id)}">
+                                                    <form th:action="@{/admin/projects/add_user}" method="post" style="display: flex; gap: 10px; align-items: center; width: 100%;">
+                                                        <input type="hidden" name="projectId" th:value="${project.id}" />
+                                                        <input type="hidden" name="userId" th:value="${user.id}" />
+                                                        <input type="text" name="role" placeholder="Wpisz rolę..." required style="flex-grow: 1; padding: 5px; border: 1px solid #ddd; border-radius: 4px;">
+                                                        <button type="submit" class="btn" style="padding: 5px 15px; font-size: 0.8em; white-space: nowrap;">Dodaj</button>
+                                                    </form>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+
+                        <button class="btn-danger" type="button" th:onclick="'openModal(\'deleteProjectModal-' + ${project.id} + '\')'">Usuń</button>
+                        <div th:id="'deleteProjectModal-' + ${project.id}" class="modal">
+                            <div class="modal-content modal-form">
+                                <span class="close" th:onclick="'closeModal(\'deleteProjectModal-' + ${project.id} + '\')'">&times;</span>
+                                <h4>Czy na pewno chcesz usunąć projekt:</h4>
+                                <h4 th:text="${project.name}" style="font-weight: bold;"></h4>
+                                <form th:action="@{/admin/projects/delete}" method="post">
+                                    <input type="hidden" name="id" th:value="${project.id}" />
+                                    <button type="submit" class="btn-danger">Usuń</button>
+                                </form>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+
+            <br><br>
+            <div class="divider"></div>
+            <br>
+
+            <h2 id="section-work_types">Zarządzanie Typami Pracy</h2>
+
+            <button type="button" class="btn" onclick="openModal('createWorkTypeModal')">Dodaj typ pracy</button>
+
+            <div id="createWorkTypeModal" class="modal">
+                <div class="modal-content modal-form">
+                    <span class="close" onclick="closeModal('createWorkTypeModal')">&times;</span>
+                    <h4>Dodaj Nowy Typ Pracy</h4>
+                    <form th:action="@{/admin/work_types/create}" method="post" th:object="${newWorkTypeForm}">
+                        <label>Nazwa typu:</label>
+                        <input type="text" th:field="*{name}" required>
+                        <label>Opis (opcjonalnie):</label>
+                        <input type="text" th:field="*{description}">
+                        <button type="submit" class="btn" style="margin-top: 15px;">Utwórz</button>
+                    </form>
+                </div>
+            </div>
+
+            <br><br>
+            <h3>Lista dostępnych typów pracy</h3>
+
+            <table id="workTypesTable" class="table-block display" style="width:100%">
+                <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Nazwa</th>
+                    <th>Opis</th>
+                    <th>Akcje</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="type : ${workTypesList}">
+                    <td th:text="${type.id}"></td>
+                    <td th:text="${type.name}" style="font-weight: bold;"></td>
+                    <td th:text="${type.description}"></td>
+                    <td>
+                        <button class="btn" type="button" th:onclick="'openModal(\'editWorkTypeModal-' + ${type.id} + '\')'">Edytuj</button>
+                        <div th:id="'editWorkTypeModal-' + ${type.id}" class="modal">
+                            <div class="modal-content modal-form">
+                                <span class="close" th:onclick="'closeModal(\'editWorkTypeModal-' + ${type.id} + '\')'">&times;</span>
+                                <h4>Edycja typu pracy</h4>
+                                <form th:action="@{/admin/work_types/edit}" method="post">
+                                    <input type="hidden" name="id" th:value="${type.id}" />
+                                    <label>Nazwa:</label>
+                                    <input type="text" name="name" th:value="${type.name}" required>
+                                    <label>Opis:</label>
+                                    <input type="text" name="description" th:value="${type.description}">
+                                    <button type="submit" class="btn">Zatwierdź zmiany</button>
+                                </form>
+                            </div>
+                        </div>
+
+                        <button class="btn-danger" type="button" th:onclick="'openModal(\'deleteWorkTypeModal-' + ${type.id} + '\')'">Usuń</button>
+                        <div th:id="'deleteWorkTypeModal-' + ${type.id}" class="modal">
+                            <div class="modal-content modal-form">
+                                <span class="close" th:onclick="'closeModal(\'deleteWorkTypeModal-' + ${type.id} + '\')'">&times;</span>
+                                <h4>Czy na pewno usunąć typ pracy:</h4>
+                                <h4 th:text="${type.name}" style="font-weight: bold;"></h4>
+                                <form th:action="@{/admin/work_types/delete}" method="post">
+                                    <input type="hidden" name="id" th:value="${type.id}" />
+                                    <button type="submit" class="btn-danger">Usuń</button>
+                                </form>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+
+            <br><br>
+            <div class="divider"></div>
+            <br>
+
+            <h2 id="section-approvals">Zatwierdzanie godzin pracy</h2>
+
+            <p>Lista pracowników oczekujących na zatwierdzenie godzin.</p>
+
+            <table id="approvalsTable" class="table-block display" style="width:100%">
+                <thead>
+                <tr>
+                    <th>Imię i Nazwisko</th>
+                    <th>Stanowisko</th>
+                    <th>Dział</th>
+                    <th>Akcja</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="user : ${notApprovedUsers}">
+                    <td th:text="${user.name} + ' ' + ${user.lastname}"></td>
+                    <td th:text="${user.position != null ? user.position.name : '-'}"></td>
+                    <td th:text="${user.department != null ? user.department.name : '-'}"></td>
+                    <td>
+                        <button class="btn" type="button" th:onclick="'openModal(\'approveHoursModal-' + ${user.id} + '\')'">
+                            Pokaż godziny
+                        </button>
+
+                        <div th:id="'approveHoursModal-' + ${user.id}" class="modal">
+                            <div class="modal-content modal-form" style="width: 90%; max-width: 1200px;">
+                                <span class="close" th:onclick="'closeModal(\'approveHoursModal-' + ${user.id} + '\')'">&times;</span>
+
+                                <h4>Godziny do zatwierdzenia: <span th:text="${user.name} + ' ' + ${user.lastname}"></span></h4>
+
+                                <table class="table-block display dt-approvals" style="width:100%">
+                                    <thead>
+                                    <tr>
+                                        <th>Data</th>
+                                        <th>Godziny</th>
+                                        <th>Czas pracy</th>
+                                        <th>Projekt</th>
+                                        <th>Typ</th>
+                                        <th>Komentarz</th>
+                                        <th>Akcja</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    <tr th:each="record : ${user.workHours}" th:if="${!record.approved}">
+                                        <td th:text="${record.date}"></td>
+                                        <td th:text="${record.startTime} + ' - ' + ${record.endTime}"></td>
+                                        <td th:text="${record.workedTime}" style="font-weight: bold;"></td>
+                                        <td th:text="${record.project != null ? record.project.name : 'Inne'}"></td>
+                                        <td th:text="${record.workType != null ? record.workType.name : '-'}"></td>
+                                        <td th:text="${record.comment}"></td>
+                                        <td>
+                                            <form th:action="@{/admin/work_hours/approve}" method="post">
+                                                <input type="hidden" name="id" th:value="${record.id}" />
+                                                <button type="submit" class="btn" style="padding: 5px 15px; font-size: 0.8em; background-color: #27ae60;">Zatwierdź</button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+
+        </div>
+    </div>
+
+    <div id="projectSidebar" class="management-sidebar">
+        <h4>Nawigacja</h4>
+        <ul>
+            <li><a href="#section-projects">Projekty</a></li>
+            <li><a href="#section-work_types">Typy Pracy</a></li>
+            <li><a href="#section-approvals">Zatwierdzanie</a></li> </ul>
+    </div>
+</div>
