@@ -39,6 +39,12 @@ import java.time.LocalDate;
 @RequestMapping("/admin/users")
 @PreAuthorize("hasRole('ROLE_ADMIN')")
 public class UserManagementController {
+    private String capitalize(String str) {
+        if (str == null || str.isEmpty()) {
+            return str;
+        }
+        return str.substring(0, 1).toUpperCase() + str.substring(1).toLowerCase();
+    }
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
@@ -89,13 +95,13 @@ public class UserManagementController {
             String hashedPassword = passwordEncoder.encode(newUserForm.getPassword());
 
             userRepository.createUser(
-                    newUserForm.getName(),
-                    newUserForm.getLastname(),
+                    capitalize(newUserForm.getName()),
+                    capitalize(newUserForm.getLastname()),
                     newUserForm.getId_stanowisko(),
                     newUserForm.getId_rola(),
                     newUserForm.getId_dzial(),
                     newUserForm.getWynagrodzenie_pln_g(),
-                    newUserForm.getEmail(),
+                    newUserForm.getEmail().toLowerCase(),
                     null,
                     hashedPassword,
                     newUserForm.getData_zatrudnienia(),
@@ -112,7 +118,7 @@ public class UserManagementController {
             redirectAttributes.addFlashAttribute("errorMessage", "Error creating user: " + e.getMessage());
         }
 
-        return "redirect:/dashboard";
+        return "redirect:/dashboard?tab=users";
     }
 
     /**
@@ -133,7 +139,7 @@ public class UserManagementController {
             redirectAttributes.addFlashAttribute("errorMessage", "Unable to delete user: " + e.getMessage());
         }
 
-        return "redirect:/dashboard";
+        return "redirect:/dashboard?tab=users";
     }
 
     /**
@@ -189,13 +195,13 @@ public class UserManagementController {
                 String hashedPassword = passwordEncoder.encode(password);
 
                 userRepository.editUserWithPassword(
-                        id, name, lastname, id_position, id_role, id_department,
-                        salary, email, hashedPassword, hireDate, terminationDate, active
+                        id, capitalize(name), capitalize(lastname), id_position, id_role, id_department,
+                        salary, email.toLowerCase(), hashedPassword, hireDate, terminationDate, active
                 );
             } else {
                 userRepository.editUser(
-                        id, name, lastname, id_position, id_role, id_department,
-                        salary, email, hireDate, terminationDate, active
+                        id, capitalize(name), capitalize(lastname), id_position, id_role, id_department,
+                        salary, email.toLowerCase(), hireDate, terminationDate, active
                 );
             }
 
@@ -207,6 +213,6 @@ public class UserManagementController {
             redirectAttributes.addFlashAttribute("errorMessage", "Error editing user: " + e.getMessage());
         }
 
-        return "redirect:/dashboard";
+        return "redirect:/dashboard?tab=users";
     }
 }
