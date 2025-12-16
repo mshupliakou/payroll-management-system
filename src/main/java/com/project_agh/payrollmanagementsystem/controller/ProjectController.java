@@ -112,4 +112,40 @@ public class ProjectController {
 
         return "redirect:/dashboard?tab=projects";
     }
+
+
+    @PostMapping("/add_user")
+    public String addUserToProject(@RequestParam("projectId") Long projectId,
+                                   @RequestParam("userId") Long userId,
+                                   @RequestParam("role") String role,
+                                   RedirectAttributes redirectAttributes) {
+        try {
+            // Wywołujemy zaktualizowaną metodę repozytorium
+            projectRepository.addUserToProject(projectId, userId, role, LocalDate.now());
+            redirectAttributes.addFlashAttribute("successMessage", "Użytkownik dodany do projektu.");
+        } catch (Exception e) {
+            e.printStackTrace();
+            redirectAttributes.addFlashAttribute("errorMessage", "Błąd: " + e.getMessage());
+        }
+        return "redirect:/dashboard?tab=projects";
+    }
+
+    @PostMapping("/remove_user")
+    public String addUserToProject(@RequestParam("projectId") Long projectId,
+                                   @RequestParam("userId") Long userId,
+                                   RedirectAttributes redirectAttributes) {
+        try {
+            // Wywołujemy zaktualizowaną metodę repozytorium
+            projectRepository.removeUserFromProject(projectId, userId);
+            redirectAttributes.addFlashAttribute("successMessage", "Użytkownik dodany do projektu.");
+        } catch (Exception e) {
+            e.printStackTrace();
+            redirectAttributes.addFlashAttribute("errorMessage", "Błąd: " + e.getMessage());
+        }
+        return "redirect:/dashboard?tab=projects";
+    }
+
+
+
+
 }
