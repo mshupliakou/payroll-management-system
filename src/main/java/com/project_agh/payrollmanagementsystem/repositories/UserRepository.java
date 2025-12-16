@@ -121,4 +121,8 @@ public interface UserRepository {
                     BigDecimal wynagrodzenie_pln_g, String email, String telefon, String haslo_hash,
                     LocalDate data_zatrudnienia, LocalDate data_zwolnienia, boolean aktywny,
                     Long currentUserId, String clientIp);
+
+    void updateAccount(Long id, String account);
+
+    List<User> findAllNotApproved();
 }
