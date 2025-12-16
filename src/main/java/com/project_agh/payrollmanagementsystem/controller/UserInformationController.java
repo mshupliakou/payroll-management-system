@@ -1,5 +1,6 @@
 package com.project_agh.payrollmanagementsystem.controller;
 
+import com.project_agh.payrollmanagementsystem.dtos.BankAccountDto;
 import com.project_agh.payrollmanagementsystem.dtos.PasswordChangeDto;
 import com.project_agh.payrollmanagementsystem.dtos.PhoneNumberDto;
 import com.project_agh.payrollmanagementsystem.entities.User;
@@ -99,6 +100,20 @@ public class UserInformationController {
 
         user.setPhone_number(form.getPhoneNumber());
         userRepository.updatePhoneNumber(user.getId(), user.getPhone_number());
+
+        return "redirect:/dashboard";
+    }
+
+    @PostMapping("/change_bank_account")
+    public String changeBankAccount(@ModelAttribute BankAccountDto form, Model model) {
+
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String email = auth.getName();
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        user.setAccount(form.getAccount());
+        userRepository.updateAccount(user.getId(), user.getAccount());
 
         return "redirect:/dashboard";
     }
