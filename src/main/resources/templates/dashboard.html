@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"> <head>
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/buttons/2.4.1/css/buttons.dataTables.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css" />
+</head>
+<script src="/js/dashboard.js"></script>
+<body>
+
+<div class="top-tabs-bar">
+    <div class="tab-with-logo">
+        <img th:src="@{/images/ME.png}" alt="ME Logo" class="logo-img">
+        <div class="tab">
+            <button class="tablinks active" onclick="openTab(event, 'My_profile')">Mój profil</button>
+            <button class="tablinks" id="work_hours-tab-btn" onclick="openTab(event, 'Work_hours')"   >Godziny pracy</button>
+            <button class="tablinks" id="my_salary-tab-btn" onclick="openTab(event, 'MySalary')"   >Moje wypłaty</button>
+            <button class="tablinks" id="salaries-tab-btn" onclick="openTab(event, 'Salaries')" sec:authorize="hasAuthority('ROLE_ACCOUNTANT')">Zarządzanie wypłatami</button>
+            <button class="tablinks" id="projects-tab-btn" onclick="openTab(event, 'Projects')" sec:authorize="hasAuthority('ROLE_ADMIN')">Zarządzanie pracą</button>
+            <button class="tablinks" onclick="openTab(event, 'Management')" sec:authorize="hasAuthority('ROLE_ADMIN')    " id="management-tab-btn">Zarządzanie firmą</button>
+        </div>
+    </div>
+
+    <form th:action="@{/logout}" method="post" class="logout-form">
+        <button type="submit" class="logout-btn">Wyloguj</button>
+    </form>
+</div>
+
+<div th:replace="~{fragments/tab-profile :: profileFragment}"></div>
+
+<div th:replace="~{fragments/tab-management :: managementFragment}"></div>
+
+<div th:replace="~{fragments/my_salary :: managementMySalary}"></div>
+
+<div th:replace="~{fragments/salaries :: managementSalaries}"></div>
+
+<div th:replace="~{fragments/tab-work :: workFragment}"></div>
+
+<div th:replace="~{fragments/tab-projects :: projectsFragment}"></div>
+
+<footer>
+    <div class="footer-info">
+        <strong>Kontakt:</strong><br>
+        Email: hr@me-company.pl<br>
+        Telefon: +48 500 600 700
+    </div>
+</footer>
+
+<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+
+
+<script type="text/javascript" language="javascript" src="https://cdn.datatables.net/buttons/2.4.1/js/dataTables.buttons.min.js"></script>
+<script type="text/javascript" language="javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script type="text/javascript" language="javascript" src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.html5.min.js"></script>
+<script type="text/javascript" language="javascript" src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.print.min.js"></script>
+<div th:replace="~{fragments/scripts :: scriptsFragment}"></div>
+</body>
+
+
+
+</html>
