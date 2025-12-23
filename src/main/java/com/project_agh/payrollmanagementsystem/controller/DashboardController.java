@@ -145,6 +145,7 @@ public class DashboardController {
         }
 
         if (user.getRole().getName().equals("ACCOUNTANT")) {
+            model.addAttribute("allUsers", userRepository.findAll());
             List<WorkHours> allUsersRecords = workHoursRepository.findAll();
             model.addAttribute("WorkHoursList", allUsersRecords);
             model.addAttribute("newPaymentStatusForm", new PaymentStatusDto());
