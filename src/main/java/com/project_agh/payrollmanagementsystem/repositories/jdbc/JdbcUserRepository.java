@@ -34,6 +34,19 @@ public class JdbcUserRepository implements UserRepository {
                     "JOIN dzial d ON d.id_dzial = p.id_dzial " +
                     "WHERE p.email = ?";
 
+    private static final String FIND_BY_ID_SQL =
+            "SELECT " +
+                    "    p.id_pracownik, p.imie, p.nazwisko, p.wynagrodzenie_pln_g, p.email, p.telefon, p.haslo_hash, " +
+                    "    p.data_zatrudnienia, p.data_zwolnienia, p.aktywny, p.konto_bankowe, " + // <--- ДОБАВЛЕНО
+                    "    s.id_stanowisko AS stanowisko_id, s.nazwa AS stanowisko_nazwa, s.opis AS stanowisko_opis, " +
+                    "    r.id_rola AS rola_id, r.nazwa AS rola_nazwa, " +
+                    "    d.id_dzial AS dzial_id, d.nazwa AS dzial_nazwa, d.opis AS dzial_opis " +
+                    "FROM pracownik p " +
+                    "JOIN stanowisko s ON s.id_stanowisko = p.id_stanowisko " +
+                    "JOIN rola r ON r.id_rola = p.id_rola " +
+                    "JOIN dzial d ON d.id_dzial = p.id_dzial " +
+                    "WHERE p.id_pracownik = ?";
+
 
     private static final String FIND_ALL_FULL_SQL =
             "SELECT " +
@@ -248,6 +261,18 @@ public class JdbcUserRepository implements UserRepository {
         if (rowsAffected != 1) {
 
         }
+    }
+
+    @Override
+    public Optional<User> findById(long userId) {
+        List<User> results = jdbcTemplate.query(
+                FIND_BY_ID_SQL,
+                userRowMapper,
+                userId
+        );
+
+
+        return results.stream().findFirst();
     }
 
     @Override
