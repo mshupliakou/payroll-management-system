@@ -13,19 +13,42 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.time.LocalDate;
 
+/**
+ * Controller responsible for managing projects within the system.
+ * <p>
+ * This controller allows administrators to create, edit, delete, and manage user assignments
+ * for projects. It is restricted to users with the {@code ROLE_ADMIN} authority.
+ * All endpoints are mapped under {@code admin/projects}.
+ * </p>
+ */
 @Controller
 @RequestMapping("admin/projects")
 @PreAuthorize("hasRole('ROLE_ADMIN')")
 public class ProjectController {
 
-
     private final ProjectRepository projectRepository;
 
+    /**
+     * Constructs a new {@code ProjectController} with the required dependency.
+     *
+     * @param projectRepository the repository used for project persistence operations
+     */
     public ProjectController(ProjectRepository projectRepository) {
-
         this.projectRepository = projectRepository;
     }
 
+    /**
+     * Creates a new project in the system.
+     * <p>
+     * Accepts project details via {@link ProjectDto}, persists the new project,
+     * and redirects the user to the projects dashboard tab.
+     * </p>
+     *
+     * @param projectDto         the DTO containing the name, description, and date range of the project
+     * @param redirectAttributes used to supply success or error messages to the view
+     * @param request            the current HTTP request
+     * @return a redirect string to the projects tab of the dashboard
+     */
     @PostMapping("/create")
     public String createProject(
             @ModelAttribute ProjectDto projectDto,
@@ -53,13 +76,20 @@ public class ProjectController {
             );
         }
 
-
         return "redirect:/dashboard?tab=projects";
-
-
     }
 
-
+    /**
+     * Deletes an existing project.
+     * <p>
+     * Removes the project identified by the ID in the provided DTO from the database.
+     * </p>
+     *
+     * @param projectDto         the DTO containing the ID of the project to delete
+     * @param redirectAttributes used to supply success or error messages to the view
+     * @param request            the current HTTP request
+     * @return a redirect string to the projects tab of the dashboard
+     */
     @PostMapping("/delete")
     public String deleteProject(
             @ModelAttribute ProjectDto projectDto,
@@ -68,7 +98,6 @@ public class ProjectController {
 
         try {
             projectRepository.deleteProject(projectDto.getId());
-
 
             redirectAttributes.addFlashAttribute(
                     "successMessage",
@@ -83,11 +112,19 @@ public class ProjectController {
             );
         }
 
-
-
         return "redirect:/dashboard?tab=projects";
     }
 
+    /**
+     * Updates the details of an existing project.
+     * <p>
+     * Modifies the name, description, and date range of a project identified by its ID.
+     * </p>
+     *
+     * @param projectDto         the DTO containing the updated project details
+     * @param redirectAttributes used to supply success or error messages to the view
+     * @return a redirect string to the projects tab of the dashboard
+     */
     @PostMapping("/edit")
     public String editProject(
             @ModelAttribute ProjectDto projectDto,
@@ -113,14 +150,25 @@ public class ProjectController {
         return "redirect:/dashboard?tab=projects";
     }
 
-
+    /**
+     * Assigns a user to a specific project.
+     * <p>
+     * Links a user to a project with a specific role. The assignment date is set to the current date.
+     * </p>
+     *
+     * @param projectId          the ID of the project
+     * @param userId             the ID of the user to assign
+     * @param role               the role the user will fulfill in the project
+     * @param redirectAttributes used to supply success or error messages to the view
+     * @return a redirect string to the projects tab of the dashboard
+     */
     @PostMapping("/add_user")
     public String addUserToProject(@RequestParam("projectId") Long projectId,
                                    @RequestParam("userId") Long userId,
                                    @RequestParam("role") String role,
                                    RedirectAttributes redirectAttributes) {
         try {
-            // Wywołujemy zaktualizowaną metodę repozytorium
+            // Invoking the repository method to link user to project
             projectRepository.addUserToProject(projectId, userId, role, LocalDate.now());
             redirectAttributes.addFlashAttribute("successMessage", "Użytkownik dodany do projektu.");
         } catch (Exception e) {
@@ -130,22 +178,30 @@ public class ProjectController {
         return "redirect:/dashboard?tab=projects";
     }
 
+    /**
+     * Removes a user from a specific project.
+     * <p>
+     * Deletes the association between the specified user and project.
+     * </p>
+     *
+     * @param projectId          the ID of the project
+     * @param userId             the ID of the user to remove
+     * @param redirectAttributes used to supply success or error messages to the view
+     * @return a redirect string to the projects tab of the dashboard
+     */
     @PostMapping("/remove_user")
     public String addUserToProject(@RequestParam("projectId") Long projectId,
                                    @RequestParam("userId") Long userId,
                                    RedirectAttributes redirectAttributes) {
         try {
-            // Wywołujemy zaktualizowaną metodę repozytorium
+            // Invoking the repository method to remove user from project
             projectRepository.removeUserFromProject(projectId, userId);
-            redirectAttributes.addFlashAttribute("successMessage", "Użytkownik dodany do projektu.");
+            redirectAttributes.addFlashAttribute("successMessage", "Użytkownik usunięty z projektu.");
         } catch (Exception e) {
             e.printStackTrace();
             redirectAttributes.addFlashAttribute("errorMessage", "Błąd: " + e.getMessage());
         }
         return "redirect:/dashboard?tab=projects";
     }
-
-
-
 
 }

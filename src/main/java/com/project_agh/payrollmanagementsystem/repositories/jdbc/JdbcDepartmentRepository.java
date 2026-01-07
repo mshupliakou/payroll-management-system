@@ -1,4 +1,5 @@
 package com.project_agh.payrollmanagementsystem.repositories.jdbc;
+
 import com.project_agh.payrollmanagementsystem.entities.Department;
 import com.project_agh.payrollmanagementsystem.repositories.DepartmentRepository;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -8,10 +9,11 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 
 /**
- * JDBC implementation of {@link DepartmentRepository}.
+ * JDBC-based implementation of the {@link DepartmentRepository} interface.
  * <p>
- * Provides methods to retrieve and create {@link Department} entities
- * using Spring's {@link JdbcTemplate}.
+ * This repository manages the persistence of {@link Department} entities using raw SQL queries
+ * executed via Spring's {@link JdbcTemplate}. It handles creating, retrieving, updating,
+ * and deleting department records in the underlying 'dzial' table.
  * </p>
  */
 @Repository
@@ -24,14 +26,13 @@ public class JdbcDepartmentRepository implements DepartmentRepository {
             "INSERT INTO dzial (nazwa, opis) VALUES (?, ?)";
 
     private static final String DELETE_DEPARTMENT =
-            "DELETE FROM  dzial \n" +
+            "DELETE FROM dzial \n" +
                     "WHERE id_dzial = ?\n";
 
-    private static final String EDIT_DEPARTMENT=
+    private static final String EDIT_DEPARTMENT =
             "UPDATE dzial SET " +
                     "nazwa = ?, " +
                     "opis = ? " +
-
                     "WHERE id_dzial = ?";
 
     private final JdbcTemplate jdbcTemplate;
@@ -45,6 +46,9 @@ public class JdbcDepartmentRepository implements DepartmentRepository {
         this.jdbcTemplate = jdbcTemplate;
     }
 
+    /**
+     * Maps a row from the 'dzial' table to a {@link Department} entity.
+     */
     private final RowMapper<Department> departmentRowMapper = (rs, rowNum) -> {
         Department department = new Department();
         department.setId(rs.getLong("id_dzial"));
@@ -56,7 +60,7 @@ public class JdbcDepartmentRepository implements DepartmentRepository {
     /**
      * Retrieves all departments from the database.
      *
-     * @return a {@link List} of all {@link Department} entities
+     * @return a {@link List} of all {@link Department} entities currently persisted
      */
     @Override
     public List<Department> findAll() {
@@ -78,6 +82,14 @@ public class JdbcDepartmentRepository implements DepartmentRepository {
         }
     }
 
+    /**
+     * Deletes a department from the database.
+     * <p>
+     * Removes the record identified by the provided ID from the 'dzial' table.
+     * </p>
+     *
+     * @param id the unique identifier of the department to delete
+     */
     @Override
     public void deleteDepartment(Long id) {
         int rowsAffected = jdbcTemplate.update(
@@ -86,9 +98,20 @@ public class JdbcDepartmentRepository implements DepartmentRepository {
         );
 
         if (rowsAffected != 1) {
+            // Optional: Handle case where delete failed or ID didn't exist
         }
     }
 
+    /**
+     * Updates the details of an existing department.
+     * <p>
+     * Modifies the name and description of the department record identified by the given ID.
+     * </p>
+     *
+     * @param id          the unique identifier of the department to update
+     * @param name        the new name to assign to the department
+     * @param description the new description to assign to the department
+     */
     @Override
     public void editDepartment(Long id, String name, String description) {
         int rowsAffected = jdbcTemplate.update(
@@ -99,6 +122,7 @@ public class JdbcDepartmentRepository implements DepartmentRepository {
         );
 
         if (rowsAffected != 1) {
+            // Optional: Handle case where update failed or ID didn't exist
         }
     }
 }

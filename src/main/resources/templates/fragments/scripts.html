@@ -64,10 +64,8 @@
             // 1. TABELA PRACOWNIKA (My Work Hours)
             // ============================================================
             if ($('#myWorkHoursTable').length > 0) {
-                (function() { // Izolacja zmiennych (IIFE)
-                    console.log("Inicjalizacja myWorkHoursTable...");
+                (function() {
                     let tableId = 'myWorkHoursTable';
-
                     let settings = getSettings("Szukaj w historii:");
                     settings.paging = false;
                     settings.dom = 'Bfrt';
@@ -75,7 +73,7 @@
                         { "visible": false, "targets": 0 }, // Kolumna Grupy (0) ukryta
                         { "orderable": false, "targets": -1 }
                     ];
-                    settings.order = [[1, 'desc']]; // Sortowanie po dacie
+                    settings.order = [[1, 'desc']];
 
                     settings.rowGroup = {
                         dataSrc: 0,
@@ -88,48 +86,32 @@
 
                     let table = $('#' + tableId).DataTable(settings);
 
-                    // --- LOGIKA POBIERANIA GRUP ---
-                    // Pobieramy dane z kolumny 0, nawet jeśli jest ukryta
                     let rawData = table.column(0).data().toArray();
                     let uniqueGroups = [];
-
-                    // Czyścimy dane (trim) i usuwamy duplikaty
                     $.each(rawData, function(i, val){
-                        // Usuwamy HTML tagi jeśli są, i białe znaki
                         let textVal = val ? String(val).replace(/<[^>]+>/g, '').trim() : "";
-                        if(textVal && $.inArray(textVal, uniqueGroups) === -1) {
-                            uniqueGroups.push(textVal);
-                        }
+                        if(textVal && $.inArray(textVal, uniqueGroups) === -1) uniqueGroups.push(textVal);
                     });
-
-                    console.log("TABELA PRACOWNIKA - Znalezione grupy:", uniqueGroups);
 
                     if(uniqueGroups.length > 0) {
                         let currentIndex = 0;
                         let showAll = false;
-
-                        // Dodajemy HTML nawigacji
                         let navHtml = `
                             <div class="group-pagination">
                                 <button id="btn-prev-my" class="group-btn" type="button">&laquo; Starsze</button>
                                 <span id="display-my" class="group-info">Ładowanie...</span>
                                 <button id="btn-next-my" class="group-btn" type="button">Nowsze &raquo;</button>
                                 <button id="btn-all-my" class="group-btn secondary" type="button">Pokaż wszystko</button>
-                            </div>
-                        `;
+                            </div>`;
                         $('#' + tableId + '_wrapper').prepend(navHtml);
 
-                        // Dodajemy filtr do DataTables
                         $.fn.dataTable.ext.search.push(function(settings, data, dataIndex) {
                             if (settings.nTable.id !== tableId) return true;
                             if (showAll) return true;
-
-                            // data[0] to wartość z kolumny 0 (grupa)
                             let rowVal = data[0] ? String(data[0]).replace(/<[^>]+>/g, '').trim() : "";
                             return rowVal === uniqueGroups[currentIndex];
                         });
 
-                        // Funkcja odświeżająca przyciski
                         function updateView() {
                             if (showAll) {
                                 $('#display-my').text("Wszystkie tygodnie (" + uniqueGroups.length + ")");
@@ -137,231 +119,144 @@
                                 $('#btn-all-my').text("Pokaż jeden tydzień");
                             } else {
                                 $('#display-my').text(uniqueGroups[currentIndex]);
-                                // Logic: index 0 = Najnowszy. index MAX = Najstarszy.
-                                // Przycisk "Starsze" (idziemy w górę indeksu)
                                 $('#btn-prev-my').prop('disabled', currentIndex >= uniqueGroups.length - 1);
-                                // Przycisk "Nowsze" (idziemy w dół indeksu)
                                 $('#btn-next-my').prop('disabled', currentIndex <= 0);
                                 $('#btn-all-my').text("Pokaż wszystko");
                             }
-                            table.draw(); // Przerysowanie tabeli uruchamia filtr
+                            table.draw();
                         }
 
-                        // Obsługa kliknięć
                         $(document).on('click', '#btn-all-my', function() { showAll = !showAll; updateView(); });
-                        $(document).on('click', '#btn-prev-my', function() {
-                            if (!showAll && currentIndex < uniqueGroups.length - 1) { currentIndex++; updateView(); }
-                        });
-                        $(document).on('click', '#btn-next-my', function() {
-                            if (!showAll && currentIndex > 0) { currentIndex--; updateView(); }
-                        });
-
-                        // Start
+                        $(document).on('click', '#btn-prev-my', function() { if (!showAll && currentIndex < uniqueGroups.length - 1) { currentIndex++; updateView(); } });
+                        $(document).on('click', '#btn-next-my', function() { if (!showAll && currentIndex > 0) { currentIndex--; updateView(); } });
                         updateView();
-                    } else {
-                        console.warn("TABELA PRACOWNIKA: Brak unikalnych grup. Nawigacja nie została dodana.");
                     }
                 })();
             }
-// --- TABELA DO WYPŁATY (Z GRUPOWANIEM MIESIĘCZNYM I CHECKBOXAMI) ---
+
+            // ============================================================
+            // 2. TABELA DO WYPŁATY (PayoutsTable)
+            // ============================================================
             if ($('#PayoutsTable').length > 0) {
-                var payoutsSettings = getSettings("Szukaj wypłaty:");
-                payoutsSettings.paging = false; // Wyświetl wszystko na jednej stronie dla łatwego zaznaczania
-                payoutsSettings.dom = 'Bfrt';
-
-                // Konfiguracja kolumn
-                payoutsSettings.columnDefs = [
-                    { "orderable": false, "targets": 0 }, // Checkbox - bez sortowania
-                    { "visible": false, "targets": 1 },   // Ukryj kolumnę miesiąca (używana do grupowania)
-                    { "orderable": false, "targets": -1 } // Akcje - bez sortowania
-                ];
-
-                // Domyślne sortowanie po dacie (kolumna 4) malejąco
-                payoutsSettings.order = [[4, 'desc']];
-
-                // Grupowanie
-                payoutsSettings.rowGroup = {
-                    dataSrc: 1, // Grupuj po kolumnie 1 (Miesiąc YYYY-MM)
-                    startRender: function (rows, group) {
-                        // Dodajemy też checkbox do nagłówka grupy, aby zaznaczyć cały miesiąc
-                        return $('<tr/>').append('<td colspan="9" style="background-color: #e0e0e0; font-weight: bold; cursor: pointer;" class="group-header-row">' +
-                            '<input type="checkbox" class="group-checkbox" style="margin-right: 10px;">' +
-                            'Miesiąc: ' + group + ' (' + rows.count() + ' pozycji)' +
-                            '</td>');
-                    }
-                };
-
-                var payoutsTable = $('#PayoutsTable').DataTable(payoutsSettings);
-
-                // --- OBSŁUGA CHECKBOXÓW ---
-
-                function updateBulkActions() {
-                    var selectedIds = [];
-
-                    // Zbieramy wszystkie zaznaczone checkboxy (tylko z widocznych wierszy)
-                    $('.payout-checkbox:checked').each(function() {
-                        selectedIds.push($(this).val());
-                    });
-
-                    // Aktualizacja licznika
-                    $('#selectedCount').text(selectedIds.length);
-
-                    // Pokaż/Ukryj pasek akcji
-                    if (selectedIds.length > 0) {
-                        $('#bulkActionsBar').css('display', 'flex');
-                    } else {
-                        $('#bulkActionsBar').hide();
-                    }
-
-                    // Wstrzyknij ukryte inputy do formularzy (status i delete)
-                    var statusInputsHtml = '';
-                    var deleteInputsHtml = '';
-
-                    selectedIds.forEach(function(id) {
-                        // Spring binduje List<Long> ids jeśli inputy mają tę samą nazwę "ids"
-                        statusInputsHtml += '<input type="hidden" name="ids" value="' + id + '">';
-                        deleteInputsHtml += '<input type="hidden" name="ids" value="' + id + '">';
-                    });
-
-                    $('#bulkStatusInputs').html(statusInputsHtml);
-                    $('#bulkDeleteInputs').html(deleteInputsHtml);
-                }
-
-                // 1. Zaznaczanie pojedynczego wiersza
-                $(document).on('change', '.payout-checkbox', function() {
-                    updateBulkActions();
-                });
-
-                // 2. Zaznaczanie "Select All" w nagłówku tabeli
-                $('#selectAllCheckbox').on('click', function() {
-                    var isChecked = $(this).is(':checked');
-                    $('.payout-checkbox').prop('checked', isChecked);
-                    $('.group-checkbox').prop('checked', isChecked);
-                    updateBulkActions();
-                });
-
-                // 3. Zaznaczanie całej grupy (Miesiąca)
-                $(document).on('click', '.group-checkbox', function(e) {
-                    e.stopPropagation(); // Żeby nie zwijało grupy (jeśli masz zwijanie)
-                    var isChecked = $(this).is(':checked');
-                    // Znajdź wszystkie wiersze w tej grupie
-                    // DataTables rowGroup nie daje prostej metody "getRowsInGroup", więc robimy to przez DOM
-                    var groupRow = $(this).closest('tr');
-                    var nextRows = groupRow.nextUntil('tr.dtrg-group'); // Wszystkie wiersze do następnej grupy
-
-                    nextRows.find('.payout-checkbox').prop('checked', isChecked);
-                    updateBulkActions();
-                });
-            }
-
-            // ============================================================
-            // TABELA RAPORTU WYNAGRODZEŃ (ADMIN)
-            // ============================================================
-            if ($('#salaryOverviewTable').length > 0) {
-                var salaryTable = $('#salaryOverviewTable').DataTable({
-                    dom: 'Bfrtip',
-                    buttons: [
-                        { extend: 'excelHtml5', className: 'btn', text: 'Eksportuj do Excel' },
-                        { extend: 'print', className: 'btn', text: 'Drukuj' }
-                    ],
-                    paging: false, // Показываем всех на одной странице
-                    columnDefs: [
-                        { "visible": false, "targets": [0, 1] } // Скрываем колонки Dział(0) и Stanowisko(1)
-                    ],
-                    order: [[0, 'asc']], // Изначальная сортировка по Отделу
-                    rowGroup: {
-                        dataSrc: 0, // Группируем по колонке 0 (Dział)
-                        startRender: function (rows, group) {
-                            // Подсчет средней ставки в группе (опционально)
-                            var avgSalary = rows
-                                .data()
-                                .pluck(5) // Берем колонку 5 (Stawka)
-                                .map(function(val) {
-                                    return parseFloat(val.replace(' PLN', '')) || 0;
-                                })
-                                .average();
-
-                            return $('<tr/>').append('<td colspan="4" style="background-color: #d1ecf1; color: #0c5460; font-weight: bold;">' +
-                                group + ' (Pracowników: ' + rows.count() + ') | Średnia stawka: ' + avgSalary.toFixed(2) + ' PLN' +
-                                '</td>');
-                        }
-                    }
-                });
-
-                // Логика переключения группировки кнопками
-                $('#group-by-dept').on('click', function() {
-                    salaryTable.rowGroup().dataSrc(0); // Группировка по Dział
-                    salaryTable.order([0, 'asc']).draw();
-
-                    // Обновляем стили кнопок
-                    $(this).removeClass('secondary').addClass('group-btn');
-                    $('#group-by-pos').removeClass('group-btn').addClass('secondary');
-                });
-
-                $('#group-by-pos').on('click', function() {
-                    salaryTable.rowGroup().dataSrc(1); // Группировка по Stanowisko
-                    salaryTable.order([1, 'asc']).draw();
-
-                    // Обновляем стили кнопок
-                    $(this).removeClass('secondary').addClass('group-btn');
-                    $('#group-by-dept').removeClass('group-btn').addClass('secondary');
-                });
-            }
-
-
-
-            // ============================================================
-            // 2. TABELA KSIĘGOWEGO (All Work Hours)
-            // ============================================================
-            if ($('#WorkHoursTable').length > 0) {
-                (function() {
-                    console.log("Inicjalizacja WorkHoursTable (Księgowy)...");
-                    let tableId = 'WorkHoursTable';
-
-                    let settings = getSettings("Szukaj w historii:");
-                    settings.paging = false;
-                    settings.dom = 'Bfrt';
-                    settings.columnDefs = [
-                        { "visible": false, "targets": 0 },
+                try {
+                    let payoutsSettings = getSettings("Szukaj wypłaty:");
+                    payoutsSettings.paging = false;
+                    payoutsSettings.dom = 'Bfrt';
+                    // Kol 0: Checkbox, Kol 1: Miesiąc (ukryty), Kol 8 (ostatnia): Akcje
+                    payoutsSettings.columnDefs = [
+                        { "orderable": false, "targets": 0 },
+                        { "visible": false, "targets": 1 },
                         { "orderable": false, "targets": -1 }
                     ];
-                    settings.order = [[3, 'desc']]; // Sort po dacie (kolumna 3)
+                    payoutsSettings.order = [[4, 'desc']]; // Data
 
-                    settings.rowGroup = {
-                        dataSrc: 0,
+                    payoutsSettings.rowGroup = {
+                        dataSrc: 1,
                         startRender: function (rows, group) {
-                            return $('<tr/>').append('<td colspan="11" style="background-color: #e0e0e0; font-weight: bold;">' +
-                                'Tydzień: ' + group + ' (' + rows.count() + ' wpisów)' +
+                            return $('<tr/>').append('<td colspan="9" style="background-color: #e0e0e0; font-weight: bold; cursor: pointer;" class="group-header-row">' +
+                                '<input type="checkbox" class="group-checkbox" style="margin-right: 10px;">' +
+                                'Miesiąc: ' + group + ' (' + rows.count() + ' pozycji)' +
                                 '</td>');
                         }
                     };
 
-                    let table = $('#' + tableId).DataTable(settings);
+                    let payoutsTable = $('#PayoutsTable').DataTable(payoutsSettings);
 
-                    // Logika grup
+                    function updateBulkActions() {
+                        let selectedIds = [];
+                        $('.payout-checkbox:checked').each(function() { selectedIds.push($(this).val()); });
+                        $('#selectedCount').text(selectedIds.length);
+                        if (selectedIds.length > 0) $('#bulkActionsBar').css('display', 'flex'); else $('#bulkActionsBar').hide();
+
+                        let statusHtml = '', deleteHtml = '';
+                        selectedIds.forEach(function(id) {
+                            statusHtml += '<input type="hidden" name="ids" value="' + id + '">';
+                            deleteHtml += '<input type="hidden" name="ids" value="' + id + '">';
+                        });
+                        $('#bulkStatusInputs').html(statusHtml);
+                        $('#bulkDeleteInputs').html(deleteHtml);
+                    }
+
+                    $(document).on('change', '.payout-checkbox', updateBulkActions);
+                    $('#selectAllCheckbox').on('click', function() {
+                        let isChecked = $(this).is(':checked');
+                        $('.payout-checkbox, .group-checkbox').prop('checked', isChecked);
+                        updateBulkActions();
+                    });
+                    $(document).on('click', '.group-checkbox', function(e) {
+                        e.stopPropagation();
+                        let isChecked = $(this).is(':checked');
+                        let groupRow = $(this).closest('tr');
+                        let nextRows = groupRow.nextUntil('tr.dtrg-group');
+                        nextRows.find('.payout-checkbox').prop('checked', isChecked);
+                        updateBulkActions();
+                    });
+                } catch(e) { console.error("Błąd PayoutsTable:", e); }
+            }
+
+            // ============================================================
+            // 3. TABELA RAPORTU (salaryOverviewTable)
+            // ============================================================
+            if ($('#salaryOverviewTable').length > 0) {
+                try {
+                    let salaryTable = $('#salaryOverviewTable').DataTable({
+                        dom: 'Bfrtip',
+                        buttons: [ { extend: 'excelHtml5', className: 'btn' }, { extend: 'print', className: 'btn' } ],
+                        paging: false,
+                        order: [[0, 'asc']], // Domyślnie po dziale
+                        rowGroup: {
+                            dataSrc: 0,
+                            startRender: function (rows, group) {
+                                // Oblicz średnią stawkę
+                                let avgSalary = rows.data().pluck(5)
+                                    .map(function(val) { return parseFloat(String(val).replace(' PLN','')) || 0; })
+                                    .average();
+                                return $('<tr/>').append('<td colspan="4" style="background-color: #d1ecf1; color: #0c5460; font-weight: bold;">' +
+                                    group + ' (Osób: ' + rows.count() + ') | Średnia: ' + avgSalary.toFixed(2) + ' PLN</td>');
+                            }
+                        }
+                    });
+
+                } catch(e) { console.error("Błąd salaryOverviewTable:", e); }
+            }
+
+            // ============================================================
+            // 4. TABELA KSIĘGOWEGO (All Work Hours)
+            // ============================================================
+            if ($('#WorkHoursTable').length > 0) {
+                (function() {
+                    let tableId = 'WorkHoursTable';
+                    let settings = getSettings("Szukaj w historii:");
+                    settings.paging = false;
+                    settings.dom = 'Bfrt';
+                    settings.columnDefs = [ { "visible": false, "targets": 0 }, { "orderable": false, "targets": -1 } ];
+                    settings.order = [[3, 'desc']];
+
+                    settings.rowGroup = {
+                        dataSrc: 0,
+                        startRender: function (rows, group) {
+                            return $('<tr/>').append('<td colspan="11" style="background-color: #e0e0e0; font-weight: bold;">Tydzień: ' + group + ' (' + rows.count() + ' wpisów)</td>');
+                        }
+                    };
+
+                    let table = $('#' + tableId).DataTable(settings);
                     let rawData = table.column(0).data().toArray();
                     let uniqueGroups = [];
                     $.each(rawData, function(i, val){
                         let textVal = val ? String(val).replace(/<[^>]+>/g, '').trim() : "";
-                        if(textVal && $.inArray(textVal, uniqueGroups) === -1) {
-                            uniqueGroups.push(textVal);
-                        }
+                        if(textVal && $.inArray(textVal, uniqueGroups) === -1) uniqueGroups.push(textVal);
                     });
-
-                    console.log("TABELA KSIĘGOWEGO - Znalezione grupy:", uniqueGroups);
 
                     if(uniqueGroups.length > 0) {
                         let currentIndex = 0;
                         let showAll = false;
-
                         let navHtml = `
                             <div class="group-pagination">
                                 <button id="btn-prev-all" class="group-btn" type="button">&laquo; Starsze</button>
                                 <span id="display-all" class="group-info">Ładowanie...</span>
                                 <button id="btn-next-all" class="group-btn" type="button">Nowsze &raquo;</button>
                                 <button id="btn-all-all" class="group-btn secondary" type="button">Pokaż wszystko</button>
-                            </div>
-                        `;
+                            </div>`;
                         $('#' + tableId + '_wrapper').prepend(navHtml);
 
                         $.fn.dataTable.ext.search.push(function(settings, data, dataIndex) {
@@ -384,30 +279,19 @@
                             }
                             table.draw();
                         }
-
                         $(document).on('click', '#btn-all-all', function() { showAll = !showAll; updateView(); });
-                        $(document).on('click', '#btn-prev-all', function() {
-                            if (!showAll && currentIndex < uniqueGroups.length - 1) { currentIndex++; updateView(); }
-                        });
-                        $(document).on('click', '#btn-next-all', function() {
-                            if (!showAll && currentIndex > 0) { currentIndex--; updateView(); }
-                        });
-
+                        $(document).on('click', '#btn-prev-all', function() { if (!showAll && currentIndex < uniqueGroups.length - 1) { currentIndex++; updateView(); } });
+                        $(document).on('click', '#btn-next-all', function() { if (!showAll && currentIndex > 0) { currentIndex--; updateView(); } });
                         updateView();
-                    } else {
-                        console.warn("TABELA KSIĘGOWEGO: Brak unikalnych grup.");
                     }
                 })();
             }
 
             // ============================================================
-            // 3. INNE TABELE
+            // 5. INNE TABELE
             // ============================================================
-            // Inicjalizacja reszty tabel...
             var usersTable = $('#myUsersTable').DataTable(commonSettings);
-            $('#statusFilter').on('change', function() {
-                usersTable.column(6).search($(this).val()).draw();
-            });
+            $('#statusFilter').on('change', function() { usersTable.column(6).search($(this).val()).draw(); });
 
             $('#projectsTable').DataTable(getSettings("Szukaj projektu:"));
             $('#workTypesTable').DataTable(getSettings("Szukaj typu pracy:"));
@@ -419,7 +303,6 @@
             $('#PaymentStatusesTable').DataTable(getSettings("Szukaj statusu wypłaty:"));
             $('#SalaryChangeHistoryTable').DataTable(getSettings("Szukaj w historii zmian:"));
             $('#AllPaymentsTable').DataTable(getSettings("Szukaj w historii wypłat:"));
-
 
             $('#statsTable').DataTable({
                 "paging": false, "searching": false, "ordering": false,

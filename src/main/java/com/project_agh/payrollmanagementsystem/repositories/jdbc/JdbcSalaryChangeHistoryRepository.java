@@ -12,6 +12,14 @@ import java.sql.Date;
 import java.time.LocalDate;
 import java.util.List;
 
+/**
+ * JDBC-based implementation of the {@link SalaryChangeHistoryRepository}.
+ * <p>
+ * This repository manages the persistence and retrieval of salary adjustment logs.
+ * It utilizes SQL JOINS to fetch the history records along with the associated employee's
+ * basic details in a single query, providing an efficient audit trail for the application.
+ * </p>
+ */
 @Repository
 public class JdbcSalaryChangeHistoryRepository implements SalaryChangeHistoryRepository {
 
@@ -29,11 +37,23 @@ public class JdbcSalaryChangeHistoryRepository implements SalaryChangeHistoryRep
 
     private final JdbcTemplate jdbcTemplate;
 
+    /**
+     * Constructs a new {@code JdbcSalaryChangeHistoryRepository}.
+     *
+     * @param jdbcTemplate the {@link JdbcTemplate} used for database operations
+     */
     public JdbcSalaryChangeHistoryRepository(JdbcTemplate jdbcTemplate) {
         this.jdbcTemplate = jdbcTemplate;
     }
 
-    // --- ROW MAPPER ---
+    /**
+     * Maps database rows to {@link SalaryChangeHistory} entities.
+     * <p>
+     * <b>Note:</b> This mapper manually constructs the {@link User} object using
+     * aliased columns ('user_name', 'user_lastname', etc.) retrieved from the SQL JOIN.
+     * This avoids the N+1 select problem.
+     * </p>
+     */
     private final RowMapper<SalaryChangeHistory> salaryChangeHistoryRowMapper = (rs, rowNum) -> {
         SalaryChangeHistory history = new SalaryChangeHistory();
 
@@ -48,6 +68,7 @@ public class JdbcSalaryChangeHistoryRepository implements SalaryChangeHistoryRep
 
         history.setDescription(rs.getString("opis"));
 
+        // Map the joined User data
         User user = new User();
         user.setId(rs.getLong("id_pracownik"));
         user.setName(rs.getString("user_name"));
@@ -59,7 +80,18 @@ public class JdbcSalaryChangeHistoryRepository implements SalaryChangeHistoryRep
         return history;
     };
 
-
+    /**
+     * Records a new salary change event in the database.
+     * <p>
+     * Inserts a record into the {@code historia_zmian_wynagrodzen} table tracking the old and new
+     * salary amounts.
+     * </p>
+     *
+     * @param userId    the unique identifier of the employee
+     * @param oldSalary the salary amount before the change
+     * @param newSalary the new salary amount
+     * @param date      the effective date of the change
+     */
     @Override
     public void changeSalary(Long userId, BigDecimal oldSalary, BigDecimal newSalary, LocalDate date) {
         jdbcTemplate.update(
@@ -68,10 +100,18 @@ public class JdbcSalaryChangeHistoryRepository implements SalaryChangeHistoryRep
                 oldSalary,
                 newSalary,
                 date,
-                null
+                null // Description is currently optional/null by default in this specific method
         );
     }
 
+    /**
+     * Retrieves the complete history of salary changes across all employees.
+     * <p>
+     * The results are ordered by date in descending order (newest changes first).
+     * </p>
+     *
+     * @return a {@link List} of all {@link SalaryChangeHistory} entities
+     */
     @Override
     public List<SalaryChangeHistory> findAll() {
         return jdbcTemplate.query(FIND_ALL_WITH_USERS_SQL, salaryChangeHistoryRowMapper);

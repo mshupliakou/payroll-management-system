@@ -1,7 +1,6 @@
 package com.project_agh.payrollmanagementsystem.controller;
 
 import com.project_agh.payrollmanagementsystem.dtos.CreateDepartmentDto;
-import com.project_agh.payrollmanagementsystem.dtos.RoleDto;
 import com.project_agh.payrollmanagementsystem.repositories.DepartmentRepository;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -12,15 +11,13 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import java.math.BigDecimal;
-import java.time.LocalDate;
-
 /**
  * Controller responsible for managing department-related administrative operations.
  * <p>
  * This controller provides functionality available only to users with the {@code ROLE_ADMIN} role.
- * It handles department creation via a POST request and delegates persistence logic to the
- * {@link DepartmentRepository}.
+ * It handles department creation, deletion, and modification via POST requests and delegates
+ * persistence logic to the {@link DepartmentRepository}.
+ * </p>
  */
 @Controller
 @RequestMapping("admin/departments")
@@ -47,6 +44,7 @@ public class DepartmentManagementController {
      * The method receives department data through a {@link CreateDepartmentDto} object,
      * invokes the repository layer to persist the department, and then redirects the user
      * back to the dashboard. Success or error messages are passed using flash attributes.
+     * </p>
      *
      * @param newDepartmentForm   the DTO containing submitted department details
      * @param redirectAttributes  used to supply success or error messages after redirect
@@ -81,6 +79,19 @@ public class DepartmentManagementController {
         return "redirect:/dashboard?tab=departments";
     }
 
+    /**
+     * Handles the deletion of an existing department.
+     * <p>
+     * This method accepts a data transfer object containing the ID of the department to be deleted.
+     * It performs the delete operation via the repository and sets a success or error message
+     * to be displayed on the dashboard.
+     * </p>
+     *
+     * @param departmentDto       the DTO containing the ID of the department to delete
+     * @param redirectAttributes  used to supply success or error messages after redirect
+     * @param request             the current HTTP request
+     * @return redirect instruction to the dashboard view (departments tab)
+     */
     @PostMapping("/delete")
     public String deleteDepartment(
             @ModelAttribute CreateDepartmentDto departmentDto,
@@ -105,11 +116,22 @@ public class DepartmentManagementController {
             );
         }
 
-
-
         return "redirect:/dashboard?tab=departments";
     }
 
+    /**
+     * Handles the modification of an existing department's details.
+     * <p>
+     * This method updates the name and description of a department identified by its ID.
+     * The parameters are bound directly from the HTTP request parameters.
+     * </p>
+     *
+     * @param id                  the unique identifier of the department to edit
+     * @param name                the new name for the department
+     * @param description         the new description for the department
+     * @param redirectAttributes  used to supply success or error messages after redirect
+     * @return redirect instruction to the dashboard view (departments tab)
+     */
     @PostMapping("/edit")
     public String editDepartment(
             @RequestParam("id") Long id,
@@ -118,10 +140,9 @@ public class DepartmentManagementController {
             RedirectAttributes redirectAttributes) {
 
         try {
-
-                departmentRepository.editDepartment(
-                        id, name, description
-                );
+            departmentRepository.editDepartment(
+                    id, name, description
+            );
 
             redirectAttributes.addFlashAttribute("successMessage",
                     "Dane działa (ID: " + id + ") zostały zaktualizowane.");

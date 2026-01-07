@@ -14,8 +14,12 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 
 /**
- * Controller responsible for handling user profile updates such as changing passwords
- * and updating phone numbers. All actions are performed for the currently authenticated user.
+ * Controller responsible for handling user profile updates.
+ * <p>
+ * This controller manages actions performed by the currently authenticated user regarding
+ * their personal information, such as changing passwords, updating phone numbers,
+ * and modifying bank account details.
+ * </p>
  */
 @Controller
 public class UserInformationController {
@@ -26,7 +30,7 @@ public class UserInformationController {
     /**
      * Creates a new {@code UserInformationController} with required dependencies.
      *
-     * @param userRepository repository for accessing and modifying user data
+     * @param userRepository  repository for accessing and modifying user data
      * @param passwordEncoder encoder used for validating and hashing passwords
      */
     public UserInformationController(UserRepository userRepository, PasswordEncoder passwordEncoder) {
@@ -39,13 +43,14 @@ public class UserInformationController {
      * <p>
      * The method performs the following steps:
      * <ul>
-     *     <li>Fetches the currently authenticated user.</li>
-     *     <li>Validates the current password.</li>
-     *     <li>Ensures the new password and its confirmation match.</li>
-     *     <li>Encodes and saves the updated password.</li>
+     * <li>Fetches the currently authenticated user.</li>
+     * <li>Validates the current password.</li>
+     * <li>Ensures the new password and its confirmation match.</li>
+     * <li>Encodes and saves the updated password.</li>
      * </ul>
      * Appropriate success or error messages are added to the model before redirecting
      * the user to the dashboard.
+     * </p>
      *
      * @param form  DTO containing the old password, new password, and confirmation
      * @param model Spring MVC model used to pass error/success messages
@@ -85,8 +90,9 @@ public class UserInformationController {
      * <p>
      * The method retrieves the authenticated user, updates the phone number field,
      * and persists the change using the repository.
+     * </p>
      *
-     * @param form DTO containing the new phone number
+     * @param form  DTO containing the new phone number
      * @param model Spring MVC model (currently unused, but available for messages)
      * @return redirect to the dashboard view
      */
@@ -104,6 +110,17 @@ public class UserInformationController {
         return "redirect:/dashboard";
     }
 
+    /**
+     * Processes the update of the authenticated user's bank account details.
+     * <p>
+     * Identifies the current user via the security context, updates their bank account information
+     * based on the provided form data, and persists the change to the database.
+     * </p>
+     *
+     * @param form  DTO containing the new bank account number
+     * @param model Spring MVC model used to pass attributes to the view
+     * @return a redirect string to the dashboard view
+     */
     @PostMapping("/change_bank_account")
     public String changeBankAccount(@ModelAttribute BankAccountDto form, Model model) {
 

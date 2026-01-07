@@ -2,7 +2,6 @@
     <div id="Salaries" class="tabcontent" sec:authorize="hasAuthority('ROLE_ACCOUNTANT')">
         <div class="management-content">
 
-
             <h2 id="section-payouts">Lista Do Wypłaty (Zeszły miesiąc)</h2>
 
             <div id="bulkActionsBar" style="display:none; background: #e8f5e9; padding: 15px; border: 1px solid #4caf50; border-radius: 5px; margin-bottom: 15px; align-items: center; gap: 15px;">
@@ -10,7 +9,6 @@
 
                 <form th:action="@{/accountant/payments/bulk-status}" method="post" style="display: flex; gap: 10px; align-items: center; margin: 0;">
                     <div id="bulkStatusInputs"></div>
-
                     <select name="statusId" class="form-control" style="width: auto; margin: 0;" required>
                         <option value="" disabled selected>Zmień status na...</option>
                         <option th:each="st : ${paymentStatusesList}"
@@ -44,9 +42,7 @@
                     <td>
                         <input type="checkbox" class="payout-checkbox" th:value="${pay.id}">
                     </td>
-                    <td th:text="${#strings.substring(pay.date, 0, 7)}"></td>
-
-                    <td th:text="${pay.user.name}"></td>
+                    <td th:text="${#strings.substring(pay.date, 0, 7)}"></td> <td th:text="${pay.user.name}"></td>
                     <td th:text="${pay.user.lastname}"></td>
                     <td th:text="${pay.date}"></td>
                     <td th:text="${pay.paymentType.name}"></td>
@@ -78,11 +74,6 @@
             <br><br>
             <div class="divider"></div>
 
-
-            </table>
-
-            <br><br>
-
             <h2 id="section-payment-history-full">Historia wszystkich wypłat</h2>
 
             <table id="AllPaymentsTable" class="table-block display" style="width:100%">
@@ -113,293 +104,159 @@
                 </tr>
                 </tbody>
             </table>
+
             <br><br>
             <div class="divider"></div>
 
             <h2 id="section-salary-report">Raport Stawek Godzinowych</h2>
-
-            <div class="group-controls" style="margin-bottom: 10px;">
-                <span>Grupuj według: </span>
-                <button type="button" class="group-btn" id="group-by-dept">Dział (Departament)</button>
-                <button type="button" class="group-btn secondary" id="group-by-pos">Stanowisko (Specjalność)</button>
-            </div>
-
             <table id="salaryOverviewTable" class="table-block display" style="width:100%">
                 <thead>
                 <tr>
-                    <th>Dział</th>      <th>Stanowisko</th> <th>Imię</th>
+                     <th>Imię</th>
                     <th>Nazwisko</th>
+                    <th>Dział</th>
+                    <th>Stanowisko</th>
                     <th>Email</th>
                     <th>Stawka (PLN/h)</th>
                 </tr>
                 </thead>
                 <tbody>
                 <tr th:each="user : ${allUsers}">
-                    <td th:text="${user.department != null ? user.department.name : 'Brak działu'}"></td>
-                    <td th:text="${user.position != null ? user.position.name : 'Brak stanowiska'}"></td>
-
                     <td th:text="${user.name}"></td>
                     <td th:text="${user.lastname}"></td>
+                    <td th:text="${user.department != null ? user.department.name : 'Brak działu'}"></td>
+                    <td th:text="${user.position != null ? user.position.name : 'Brak stanowiska'}"></td>
                     <td th:text="${user.email}"></td>
                     <td th:text="${user.salary_pln_h} + ' PLN'" style="font-weight: bold; color: #2c3e50;"></td>
                 </tr>
                 </tbody>
             </table>
-            <br><br>
 
             <br><br>
             <div class="divider"></div>
 
             <h2 id="section-payment_types">Zarządzanie typami wypłat</h2>
-
             <h3>Dodać nowy typ</h3>
-
             <button type="button" class="btn" onclick="openModal('createPaymentTypeModal')">Dodaj typ</button>
 
-
-
             <div id="createPaymentTypeModal" class="modal">
-
                 <div class="modal-content modal-form">
-
                     <span class="close" onclick="closeModal('createPaymentTypeModal')">&times;</span>
-
-                    <h4>Dodaj Nowe Stanowisko</h4>
-
+                    <h4>Dodaj Nowy Typ Wypłaty</h4>
                     <form th:action="@{accountant/payments/types/create}" method="post" th:object="${newPaymentTypeForm}">
-
                         <label>Nazwa:</label>
-
                         <input type="text" th:field="*{name}" required>
-
                         <label>Opis:</label>
-
                         <input type="text" th:field="*{description}" >
-
                         <button type="submit" class="btn">Utwórz</button>
-
                     </form>
-
                 </div>
-
             </div>
 
-
-
-            <br><br><br>
-
-            <h3>Wszystkie typy wypłaty</h3>
-
+            <br><br>
             <table id="PaymentTypesTable" class="table-block display" style="width:100%">
-
                 <thead>
-
                 <tr>
-
                     <th>ID</th><th>Nazwa Wypłaty</th><th>Opis</th><th>Akcje</th>
-
                 </tr>
-
                 </thead>
-
                 <tbody>
-
                 <tr th:each="pos : ${paymentTypesList}">
-
                     <td th:text="${pos.id}"></td>
-
                     <td th:text="${pos.name}"></td> <td th:text="${pos.description}"></td>
-
                     <td>
-
                         <button class="btn" type="button" th:onclick="'openModal(\'editPayTypeModel-' + ${pos.id} + '\')'">Edytuj</button>
-
                         <div th:id="'editPayTypeModel-' + ${pos.id}" class="modal">
-
                             <div class="modal-content modal-form">
-
                                 <span class="close" th:onclick="'closeModal(\'editPayTypeModel-' + ${pos.id} + '\')'">&times;</span>
-
                                 <h4>Edycja typu wypłaty:</h4>
-
                                 <form th:action="@{/accountant/payments/types/edit}" method="post">
-
                                     <input type="hidden" name="id" th:value="${pos.id}" />
-
-                                    <label>Nazwa Typu Wypłaty:</label>
-
+                                    <label>Nazwa:</label>
                                     <input type="text" name="name" th:value="${pos.name}" required>
-
                                     <label>Opis:</label>
-
                                     <input type="text" name="description" th:value="${pos.description}">
-
                                     <button type="submit" class="btn">Zatwierdź zmiany</button>
-
                                 </form>
-
                             </div>
-
                         </div>
-
                         <button class="btn-danger" type="button" th:onclick="'openModal(\'deletePayTypeModel-' + ${pos.id} + '\')'">Usuń</button>
-
                         <div th:id="'deletePayTypeModel-' + ${pos.id}" class="modal">
-
                             <div class="modal-content modal-form">
-
                                 <span class="close" th:onclick="'closeModal(\'deletePayTypeModel-' + ${pos.id} + '\')'">&times;</span>
-
-                                <h4>Czy na pewno chcesz usunąć:</h4>
-
-                                <h4 th:text="${pos.name}" style="font-weight: bold;"></h4>
-
+                                <h4>Czy na pewno chcesz usunąć?</h4>
                                 <form th:action="@{/accountant/payments/types/delete}" method="post">
-
                                     <input type="hidden" name="id" th:value="${pos.id}" />
-
                                     <button type="submit" class="btn-danger">Usuń</button>
-
                                 </form>
-
                             </div>
-
                         </div>
-
                     </td>
-
                 </tr>
-
                 </tbody>
-
             </table>
-
-
 
             <div class="divider"></div>
 
             <h2 id="section-payment_statuses">Zarządzanie statusami wypłat</h2>
-
             <h3>Dodać nowy status</h3>
-
             <button type="button" class="btn" onclick="openModal('createPaymentStatusModal')">Dodaj status</button>
 
-
-
             <div id="createPaymentStatusModal" class="modal">
-
                 <div class="modal-content modal-form">
-
                     <span class="close" onclick="closeModal('createPaymentStatusModal')">&times;</span>
-
                     <h4>Dodaj Nowy Status</h4>
-
                     <form th:action="@{accountant/payments/statuses/create}" method="post" th:object="${newPaymentStatusForm}">
-
                         <label>Nazwa:</label>
-
                         <input type="text" th:field="*{name}" required>
-
                         <label>Opis:</label>
-
                         <input type="text" th:field="*{description}" >
-
                         <button type="submit" class="btn">Utwórz</button>
-
                     </form>
-
                 </div>
-
             </div>
 
-
-
-            <br><br><br>
-
-            <h3>Wszystkie statusy wypłaty</h3>
-
+            <br><br>
             <table id="PaymentStatusesTable" class="table-block display" style="width:100%">
-
                 <thead>
-
                 <tr>
-
                     <th>ID</th><th>Status</th><th>Opis</th><th>Akcje</th>
-
                 </tr>
-
                 </thead>
-
                 <tbody>
-
                 <tr th:each="pos : ${paymentStatusesList}">
-
                     <td th:text="${pos.id}"></td>
-
                     <td th:text="${pos.name}"></td> <td th:text="${pos.description}"></td>
-
                     <td>
-
                         <button class="btn" type="button" th:onclick="'openModal(\'editPayStatusModel-' + ${pos.id} + '\')'">Edytuj</button>
-
                         <div th:id="'editPayStatusModel-' + ${pos.id}" class="modal">
-
                             <div class="modal-content modal-form">
-
                                 <span class="close" th:onclick="'closeModal(\'editPayStatusModel-' + ${pos.id} + '\')'">&times;</span>
-
-                                <h4>Edycja statusu wypłaty:</h4>
-
+                                <h4>Edycja statusu:</h4>
                                 <form th:action="@{/accountant/payments/statuses/edit}" method="post">
-
                                     <input type="hidden" name="id" th:value="${pos.id}" />
-
-                                    <label>Nazwa Statusu Wypłaty:</label>
-
+                                    <label>Nazwa:</label>
                                     <input type="text" name="name" th:value="${pos.name}" required>
-
                                     <label>Opis:</label>
-
                                     <input type="text" name="description" th:value="${pos.description}">
-
                                     <button type="submit" class="btn">Zatwierdź zmiany</button>
-
                                 </form>
-
                             </div>
-
                         </div>
-
                         <button class="btn-danger" type="button" th:onclick="'openModal(\'deletePayStatusModel-' + ${pos.id} + '\')'">Usuń</button>
-
                         <div th:id="'deletePayStatusModel-' + ${pos.id}" class="modal">
-
                             <div class="modal-content modal-form">
-
                                 <span class="close" th:onclick="'closeModal(\'deletePayStatusModel-' + ${pos.id} + '\')'">&times;</span>
-
-                                <h4>Czy na pewno chcesz usunąć:</h4>
-
-                                <h4 th:text="${pos.name}" style="font-weight: bold;"></h4>
-
+                                <h4>Czy na pewno chcesz usunąć?</h4>
                                 <form th:action="@{/accountant/payments/statuses/delete}" method="post">
-
                                     <input type="hidden" name="id" th:value="${pos.id}" />
-
                                     <button type="submit" class="btn-danger">Usuń</button>
-
                                 </form>
-
                             </div>
-
                         </div>
-
                     </td>
-
                 </tr>
-
                 </tbody>
-
             </table>
 
             <div class="divider"></div>
@@ -435,7 +292,7 @@
                 <thead>
                 <tr>
                     <th>Grupa</th>
-                    <th>Imię</th>     <th>Nazwisko</th> <th>Data</th>
+                    <th>Imię</th> <th>Nazwisko</th> <th>Data</th>
                     <th>Dzień</th>
                     <th>Godziny</th>
                     <th>Czas pracy</th>
@@ -448,7 +305,6 @@
                 <tbody>
                 <tr th:each="record : ${WorkHoursList}">
                     <td th:text="${record.weekRange}"></td>
-
                     <td th:text="${record.user.name}"></td>
                     <td th:text="${record.user.lastname}"></td>
                     <td th:text="${record.date}"></td>
@@ -471,7 +327,7 @@
     <div id="salariesSidebar" class="management-sidebar">
         <h4>Nawigacja</h4>
         <ul>
-            <li><a href="#section-payouts">Do wypłaty(miesiąc)</a></li>
+            <li><a href="#section-payouts">Do wypłaty (miesiąc)</a></li>
             <li><a href="#section-payment-history-full">Historia wypłat</a></li>
             <li><a href="#section-salary-report">Raport Stawek</a></li>
             <li><a href="#section-payment_types">Typy wypłaty</a></li>
