@@ -176,6 +176,7 @@ public class DashboardController {
         model.addAttribute("allUsers", Collections.emptyList());
         model.addAttribute("notApprovedUsers", Collections.emptyList());
         model.addAttribute("newPaymentStatusForm", new PaymentStatusDto());
+        model.addAttribute("paymentHistoryListForMe", paymentRepository.findAllMine(user.getId()));
 
         // Logic specifically for ADMINISTRATORS
         if (user.getRole().getName().equals("ADMIN")) {
