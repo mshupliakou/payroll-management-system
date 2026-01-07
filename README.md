@@ -86,8 +86,8 @@ cd payroll-management-system
 
 ./mvnw spring-boot:run
 Access the Application: Open your browser and navigate to: http://localhost:8080
-
-🗂 Project Structure
+````
+### 🗂 Project Structure
 src/main/java/.../controller — REST and MVC controllers (HTTP request handling).
 
 src/main/java/.../repositories/jdbc — Repository layer implemented with raw JDBC (direct SQL).
@@ -97,7 +97,7 @@ src/main/java/.../service — Business logic (including AutoPayoutService).
 src/main/java/.../entities — POJO classes representing database tables.
 
 src/main/resources/templates — Thymeleaf HTML templates.
-````
+
 
 ### 👨‍💻 Author
 Developed as part of the Database Systems course (Projekt BD1). Mikhail Shupliakou
