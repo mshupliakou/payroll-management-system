@@ -23,6 +23,13 @@ public interface PaymentRepository {
     List<Payment> findAll();
 
     /**
+     * Retrieves the complete history of all my payments in the system.
+     *
+     * @return a {@link List} of all {@link Payment} entities
+     */
+    List<Payment> findAllMine(Long userId);
+
+    /**
      * Creates a new payment record.
      * <p>
      * <i>Note: Implementation details (parameters) are pending.</i>
