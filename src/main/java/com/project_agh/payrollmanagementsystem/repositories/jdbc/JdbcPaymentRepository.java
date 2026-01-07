@@ -39,6 +39,20 @@ public class JdbcPaymentRepository implements PaymentRepository {
             ORDER BY h.data DESC
             """;
 
+    private static final String FIND_ALL_MINE_SQL = """
+            SELECT h.id_wyplata, h.wyplata, h.data, h.opis,
+                   p.id_pracownik, p.imie, p.nazwisko, p.email,
+                   t.id_typ_wyplaty, t.nazwa AS typ_nazwa,
+                   s.id_status_wyplaty, s.nazwa AS status_nazwa
+            FROM historia_wyplat h 
+            JOIN pracownik p ON h.id_pracownik = p.id_pracownik
+            LEFT JOIN typ_wyplaty t ON h.id_typ_wyplaty = t.id_typ_wyplaty
+            LEFT JOIN status_wyplaty s ON h.id_status_wyplaty = s.id_status_wyplaty
+            WHERE p.id_pracownik = ?
+            ORDER BY h.data DESC
+            
+            """;
+
     private static final String DELETE_SQL = "DELETE FROM historia_wyplat WHERE id_wyplata = ?";
     private static final String UPDATE_STATUS_SQL = "UPDATE historia_wyplat SET id_status_wyplaty = ? WHERE id_wyplata = ?";
 
@@ -109,6 +123,11 @@ public class JdbcPaymentRepository implements PaymentRepository {
     @Override
     public List<Payment> findAll() {
         return jdbcTemplate.query(FIND_ALL_SQL, paymentRowMapper);
+    }
+
+    @Override
+    public List<Payment> findAllMine(Long userId) {
+        return jdbcTemplate.query(FIND_ALL_MINE_SQL, paymentRowMapper, userId);
     }
 
     /**
